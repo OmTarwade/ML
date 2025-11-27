@@ -1,0 +1,85 @@
+6_k_means
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+data = pd.read_csv('/content/Mall_Customers.csv')
+
+data.shape
+data.columns
+
+X = data.iloc[:, [3, 4]]
+X.head()
+
+from sklearn.cluster import KMeans
+cls = KMeans(n_clusters=3, random_state=0)
+cls.fit_predict(X)
+cls.inertia_
+
+labels = cls.fit_predict(X)
+
+# Initial cluster scatter (k=3)
+plt.figure()
+plt.title("Initial KMeans (k=3) - Income vs Spending")
+plt.xlabel('Annual Income')
+plt.ylabel('Spending Score')
+plt.scatter(X.iloc[:, 0], X.iloc[:, 1], c=labels, cmap='rainbow')
+plt.show()
+
+# Elbow Method
+sse = []
+for k in range(1, 16):
+    cls = KMeans(n_clusters=k, random_state=0)
+    cls.fit_predict(X)
+    sse.append(cls.inertia_)
+
+plt.figure()
+plt.plot(range(1, 16), sse, marker='o')
+plt.title("Elbow Method (SSE vs K)")
+plt.xlabel('Value of K')
+plt.ylabel('SSE')
+plt.xticks(range(1,16))
+plt.grid(True)
+plt.show()
+
+# Silhouette Method
+from sklearn.metrics import silhouette_score
+silh = []
+for k in range(2, 16):
+    cls = KMeans(n_clusters=k, random_state=0)
+    labels_k = cls.fit_predict(X)
+    score = silhouette_score(X, labels_k)
+    silh.append(score)
+
+plt.figure()
+plt.bar(range(2, 16), silh)
+plt.title("Silhouette Score vs K")
+plt.xlabel('Value of K')
+plt.ylabel('Silhouette Score')
+plt.xticks(range(2,16))
+plt.grid(axis='y')
+plt.show()
+
+# Final clustering with chosen k (example k=5)
+cls = KMeans(n_clusters=5, random_state=0)
+labels = cls.fit_predict(X)
+centers = cls.cluster_centers_
+
+plt.figure(figsize=(16, 9))
+plt.title("Final Clusters (k=5) with Centroids")
+plt.xlabel('Annual Income')
+plt.ylabel('Spending Score')
+plt.scatter(X.iloc[:, 0], X.iloc[:, 1], c=labels, cmap='rainbow')
+plt.scatter(centers[:, 0], centers[:, 1], s=200, color='red')
+plt.show()
+
+data[labels == 0]
+data[labels == 1]
+data[labels == 2]
+data[labels == 3]
+data[labels == 4]
+
+data[labels == 4].to_csv('Mall_Customers_Four.csv')
+
+cust = [[30, 73]]
+cls.predict(cust)[0]
