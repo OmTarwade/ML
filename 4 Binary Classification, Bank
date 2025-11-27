@@ -1,0 +1,99 @@
+4_binary_classification
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, roc_curve, auc
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+
+df = pd.read_csv('/content/banknotes.csv')
+
+
+print("Data Head:")
+print(df.head())
+print("\nData Info:")
+df.info()
+
+
+X = df.drop('Class', axis=1)   # Variance, Skewness, Curtosis, Entropy
+y = df['Class']
+
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# --------------------------
+# 1) Logistic Regression
+# --------------------------
+lr = LogisticRegression(max_iter=2000)
+lr.fit(X_train, y_train)
+y_pred_lr = lr.predict(X_test)
+
+print("\nLogistic Regression Results:")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_lr):.4f}")
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred_lr))
+
+cm_lr = confusion_matrix(y_test, y_pred_lr)
+plt.figure(figsize=(6,5))
+sns.heatmap(cm_lr, annot=True, fmt='d', cmap='Blues',
+            xticklabels=['Predicted 0','Predicted 1'],
+            yticklabels=['Actual 0','Actual 1'])
+plt.title('Logistic Regression - Confusion Matrix')
+plt.ylabel('Actual')
+plt.xlabel('Predicted')
+plt.tight_layout()
+plt.savefig('confusion_matrix_logistic.png')
+plt.show()
+
+# ROC for Logistic
+y_prob_lr = lr.predict_proba(X_test)[:, 1]
+fpr_lr, tpr_lr, _ = roc_curve(y_test, y_prob_lr)
+auc_lr = auc(fpr_lr, tpr_lr)
+print(f"Logistic ROC AUC: {auc_lr:.4f}")
+
+# --------------------------
+# 2) Decision Tree
+# --------------------------
+dt = DecisionTreeClassifier(random_state=42)
+dt.fit(X_train, y_train)
+y_pred_dt = dt.predict(X_test)
+
+print("\nDecision Tree Results:")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_dt):.4f}")
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred_dt))
+
+cm_dt = confusion_matrix(y_test, y_pred_dt)
+plt.figure(figsize=(6,5))
+sns.heatmap(cm_dt, annot=True, fmt='d', cmap='Greens',
+            xticklabels=['Predicted 0','Predicted 1'],
+            yticklabels=['Actual 0','Actual 1'])
+plt.title('Decision Tree - Confusion Matrix')
+plt.ylabel('Actual')
+plt.xlabel('Predicted')
+plt.tight_layout()
+plt.savefig('confusion_matrix_tree.png')
+plt.show()
+
+# ROC for Decision Tree
+y_prob_dt = dt.predict_proba(X_test)[:, 1]
+fpr_dt, tpr_dt, _ = roc_curve(y_test, y_prob_dt)
+auc_dt = auc(fpr_dt, tpr_dt)
+print(f"Decision Tree ROC AUC: {auc_dt:.4f}")
+
+
+plt.figure(figsize=(8,6))
+plt.plot(fpr_lr, tpr_lr, label=f"Logistic Regression AUC = {auc_lr:.3f}")
+plt.plot(fpr_dt, tpr_dt, label=f"Decision Tree AUC = {auc_dt:.3f}")
+plt.plot([0,1], [0,1], linestyle='--', color='grey')
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.title("ROC Curve")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig('roc_comparison.png')
+plt.show()
